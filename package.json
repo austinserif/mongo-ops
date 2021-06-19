@@ -1,0 +1,22 @@
+{
+  "name": "mongo-ops",
+  "version": "1.0.0",
+  "description": "A wrapper for MongoClient that creates a clean db abstraction layer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/austinserif/mongo-ops.git"
+  },
+  "keywords": [
+    "mongodb"
+  ],
+  "author": "Austin Serif",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/austinserif/mongo-ops/issues"
+  },
+  "homepage": "https://github.com/austinserif/mongo-ops#readme"
+}
