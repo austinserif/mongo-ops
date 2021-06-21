@@ -18,5 +18,11 @@
   "bugs": {
     "url": "https://github.com/austinserif/mongo-ops/issues"
   },
-  "homepage": "https://github.com/austinserif/mongo-ops#readme"
+  "homepage": "https://github.com/austinserif/mongo-ops#readme",
+  "dependencies": {
+    "mongodb": "^3.6.9"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.4"
+  }
 }
