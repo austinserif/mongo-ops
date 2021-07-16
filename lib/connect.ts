@@ -10,6 +10,57 @@
  */
 type ConnectionParamType = "default" | "args" | "custom";
 
+function getConnectionStringParams (paramType: ConnectionParamType) {
+    if (paramType === "args") {
+        // look for connection string params in args
+    } else if (paramType === "custom") {
+        // look for connection string params based on custom env var naming scheme
+    } else {
+        // look for connection string params based on standard env var naming scheme (this assumes that the server running the program is only communicating with a single database or cluster)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+type UriPrefix = "mongo+srv://" | "mongodb://";
+
+interface AuthCredentials {
+    encoding: string,
+    username: string,
+    password: string
+};
+
+/**
+ * Contains hostname and optional port props. If port is not 
+ * included it will default to 27017.
+ */
+interface HostAndPort {
+    host: string,
+    port?: string
+};
+
+/**
+ * Defines an interface for the constituent elements of 
+ * a standard Mongo DB URI Connection String. These elements are 
+ * specified here: https://docs.mongodb.com/manual/reference/connection-string/
+ */
+interface ConnectionParams {
+    uriPrefix: UriPrefix,
+    credentials?: AuthCredentials,
+    hostAndPort: HostAndPort,
+
+    defaultAuthDb?: string, // TODO: understand this and create interface
+    additionalOptions?: string // TOOD: understand this and create interface
+};
 
 // FUNCTION: getConnectionStringConfig
 /**
