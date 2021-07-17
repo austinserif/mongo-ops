@@ -20,23 +20,32 @@ function getConnectionStringParams (paramType: ConnectionParamType) {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
+/**
+ * Defines the shape of an object that contains information
+ * for a custom environmental variables naming scheme. The purpose of
+ * this is to allow multi-database/cluster access from a single server.
+ */
+interface CustomConnectionParamLocation {
+    PREFIX: string,
+    AUTH: {
+        ENCODING?: string,
+        USERNAME?: string,
+        PASSWORD?: string
+    },
+    HOST_AND_PORT: {
+        HOST: string,
+        PORT?: string
+    },
+    DEFAULT_AUTH_DB?: string,
+    ADDITIONAL_OPTIONS?: string
+}
 
 type UriPrefix = "mongo+srv://" | "mongodb://";
 
 interface AuthCredentials {
-    encoding: string,
-    username: string,
-    password: string
+    encoding?: string,
+    username?: string,
+    password?: string
 };
 
 /**
