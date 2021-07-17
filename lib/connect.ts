@@ -1,5 +1,7 @@
 'use strict';
 
+import MongoOpsError from "./error";
+
 /**
  * Defines the type of param structure the program should
  * use to look for the connection string params.
@@ -10,13 +12,27 @@
  */
 type ConnectionParamType = "default" | "args" | "custom";
 
-function getConnectionStringParams (paramType: ConnectionParamType) {
+
+
+/**
+ * Takes a string detailing where to look for connection string information, and 
+ * then builds the string if the information can be collected and parsed. An additional 
+ * options param should be passed when invoking a `paramType` other than `"default"`, and 
+ * must contain a named prop corresponding to that specific `paramType`.
+ *
+ */
+export function getConnectionStringParams (paramType: ConnectionParamType, options?:{ args?: ConnectionParams, custom?: CustomConnectionParamLocation }) {
     if (paramType === "args") {
-        // look for connection string params in args
+        // throw error if no corresponding args object is passed
+        if (!options.args) throw new MongoOpsError(`When passing "args" paramType, a corresponding "args" object--containing the arguments--must be passed inside of the options param`);
+
+
+
     } else if (paramType === "custom") {
         // look for connection string params based on custom env var naming scheme
     } else {
-        // look for connection string params based on standard env var naming scheme (this assumes that the server running the program is only communicating with a single database or cluster)
+        // look for connection string params based on standard env var naming scheme 
+        // (this assumes that the server running the program is only communicating with a single database or cluster)
     }
 }
 
@@ -26,7 +42,7 @@ function getConnectionStringParams (paramType: ConnectionParamType) {
  * this is to allow multi-database/cluster access from a single server.
  */
 interface CustomConnectionParamLocation {
-    PREFIX: string,
+    PREFIX: UriPrefix,
     AUTH: {
         ENCODING?: string,
         USERNAME?: string,
@@ -44,8 +60,10 @@ type UriPrefix = "mongo+srv://" | "mongodb://";
 
 interface AuthCredentials {
     encoding?: string,
-    username?: string,
-    password?: string
+    userpass?: {
+        username: string,
+        password: string        
+    }
 };
 
 /**
@@ -78,6 +96,37 @@ interface ConnectionParams {
  * (current args, default env vars, special env vars, etc). If the inputs are valid, 
  * then the function should build them into an object and return it.
  */
+
+function buildCredentialString(credentials: AuthCredentials) {
+    // check endcoding
+    // TODO: set standards for url perecent encodings and write logic for validation
+
+    // build userpass string
+    const userpass = credentials.userpass ? `${credentials.userpass.username}@${credentials.userpass.password}` : ``;
+
+    // return string
+    return userpass;
+}
+
+function buildHostAndPortString(hostAndPort: HostAndPort) {
+    // ignore port if undefined, otherwise build string fragment
+    const port = hostAndPort.port ? `[:${hostAndPort.port}]` : ``;
+
+    // return concatonated host and port
+    return hostAndPort.host + port;
+}
+
+function buildUriConnectionString(params: ConnectionParams) {
+    // build credentials string
+
+    // build host and port string
+
+    // build default auth db string
+
+    // build additional options string
+
+    // return concatonate pieces with prepend uriPrefix
+}
 
 
 
@@ -115,7 +164,7 @@ interface ConnectionParams {
  * connection with the database server, and returns 
  * a connection object.
  */
-async function handleClientConnection() {
+export async function handleClientConnection() {
     try {
         // require the MongoClient constructor
         const MongoClient = require('mongodb').MongoClient;
@@ -138,5 +187,3 @@ async function handleClientConnection() {
         throw new Error('An unknown error occurred');
     }
 };
-
-module.exports = { handleClientConnection };
