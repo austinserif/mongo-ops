@@ -38,39 +38,92 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
         // otherwise return the custom params
         return customParams;
     } else {
-        // look for connection string params based on standard env var naming scheme
-        if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
+        const uriPrefix = process.env.PREFIX || new Error('No env variable found for PREFIX');
+        const host = process.env.HOST || new Error('No env variable found for HOST');
+        const port = process.env.PORT || new Error('No env variable found for PORT');
+        const username = process.env.USERNAME || new Error('No env variable found for USERNAME');
+        const password = process.env.PASSWORD || new Error('No env variable found for PASSWORD');
+        const isUriEncoded = process.env.IS_URI_ENCODED || new Error('No env variable found for IS_URI_ENCODED');
+
+        [uriPrefix, host, port, username, password, isUriEncoded].forEach((item) => {
+            if (item instanceof Error) throw item;
+        });
+
+        if ((uriPrefix !== 'mongo+srv://') && (uriPrefix !== 'mongodb://')) throw new Error('The value provided for customPrefix property at custom env var location does not match any expected prefixes');
+        if ((isUriEncoded !== 'true') && (isUriEncoded !== 'false')) throw new Error('The value provided for isUriEncoded must be either true or false');
+
+        const credentials: AuthCredentials = {
+            isUriEncoded: Boolean(isUriEncoded),
+            userpass: {
+                username,
+                password
+            }        
+        };
+    
+        const hostAndPort: HostAndPort = {
+            host,
+            port     
+        };
+
+        const params: ConnectionParams = {
+            uriPrefix,
+            credentials,
+            hostAndPort
+            // add support for additional db auth and options
+        }
+
+        return params;
 
         // (this assumes that the server running the program is only communicating with a single database or cluster)
     }
 }
 
+/** Builds a connection parameters object based on a provided set custom env variable names, assuming all
+ * required fields are provided
+ */
 function buildCustomParams(params: CustomConnectionParamLocation) {
-    const customPrefix: UriPrefix = process.env[params.PREFIX];
-    if ((customPrefix !== 'mongo+srv://') && (customPrefix !== 'mongodb://')) throw new Error('The value provided for customPrefix property at custom env var location does not match any expected prefixes')
+    const uriPrefix = process.env[params.PREFIX];
+    if (uriPrefix === undefined) throw new Error('No string value has been defined for the specified env variable key');
+    if ((uriPrefix !== 'mongo+srv://') && (uriPrefix !== 'mongodb://')) throw new Error('The value provided for customPrefix property at custom env var location does not match any expected prefixes');
     
-    
-    const customCredentials: AuthCredentials = {
-        isUriEncoded: process.env[params.AUTH.IS_URI_ENCODED],
+    const isUriEncoded = process.env[params.IS_URI_ENCODED];
+    if (uriPrefix === undefined) throw new Error('No string value has been defined for the specified env variable key');
+    if ((isUriEncoded !== 'true') && (isUriEncoded !== 'false')) throw new Error('The value provided for isUriEncoded must be either true or false');
+
+    const username = process.env[params.USERNAME];
+    if (username === undefined) throw new Error('No string value has been defined for the specified env variable key');
+
+    const password = process.env[params.PASSWORD];
+    if (password === undefined) throw new Error('No string value has been defined for the specified env variable key');
+
+    const host = process.env[params.HOST];
+    if (host === undefined) throw new Error('No string value has been defined for the specified env variable key');
+
+    const port = process.env[params.PORT];
+    if (port === undefined) throw new Error('No string value has been defined for the specified env variable key');
+
+    const credentials: AuthCredentials = {
+        isUriEncoded: Boolean(isUriEncoded),
         userpass: {
-            username: process.env[params.AUTH.USERNAME],
-            password: process.env[params.AUTH.PASSWORD]
+            username,
+            password
         }        
     };
 
     const customHostAndPort: HostAndPort = {
-        host: process.env[params.HOST_AND_PORT.HOST],
-        port: process.env[params.HOST_AND_PORT.PORT]        
-    }
+        host,
+        port     
+    };
+
     const customParams: ConnectionParams = {
-        uriPrefix: customPrefix,
-        credentials: customCredentials,
+        uriPrefix,
+        credentials: credentials,
         hostAndPort: customHostAndPort
         // add support for additional db auth and options
     }
     
     return customParams;
-}
+};
 
 /**
  * Defines the shape of an object that contains information
@@ -79,15 +132,11 @@ function buildCustomParams(params: CustomConnectionParamLocation) {
  */
 interface CustomConnectionParamLocation {
     PREFIX: string,
-    AUTH: {
-        USERNAME: string,
-        PASSWORD: string,
-        IS_URI_ENCODED: string
-    },
-    HOST_AND_PORT: {
-        HOST: string,
-        PORT?: string
-    },
+    USERNAME: string,
+    PASSWORD: string,
+    IS_URI_ENCODED: string,
+    HOST: string,
+    PORT: string,
     DEFAULT_AUTH_DB?: string,
     ADDITIONAL_OPTIONS?: string
 }
