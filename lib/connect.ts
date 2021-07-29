@@ -24,7 +24,7 @@ type ConnectionParamType = "default" | "args" | "custom";
 export function getConnectionStringParams (paramType: ConnectionParamType, options?:{ args?: ConnectionParams, custom?: CustomConnectionParamLocation }) {
     if (paramType === "args") {
         // throw error if no corresponding args object is passed
-        if (!options.args) throw new MongoOpsError(`When passing "args" paramType, a corresponding "args" object--containing the arguments--must be passed inside of the options param`);
+        if (options === undefined || !options.args) throw new MongoOpsError(`When passing "args" paramType, a corresponding "args" object--containing the arguments--must be passed inside of the options param`);
 
 
 
@@ -43,11 +43,7 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
  */
 interface CustomConnectionParamLocation {
     PREFIX: UriPrefix,
-    AUTH: {
-        ENCODING?: string,
-        USERNAME?: string,
-        PASSWORD?: string
-    },
+    AUTH: object,
     HOST_AND_PORT: {
         HOST: string,
         PORT?: string
@@ -59,7 +55,7 @@ interface CustomConnectionParamLocation {
 type UriPrefix = "mongo+srv://" | "mongodb://";
 
 interface AuthCredentials {
-    encoding?: string,
+    isUriEncoded: boolean,
     userpass?: {
         username: string,
         password: string        
@@ -82,7 +78,7 @@ interface HostAndPort {
  */
 interface ConnectionParams {
     uriPrefix: UriPrefix,
-    credentials?: AuthCredentials,
+    credentials: AuthCredentials,
     hostAndPort: HostAndPort,
 
     defaultAuthDb?: string, // TODO: understand this and create interface
@@ -98,34 +94,44 @@ interface ConnectionParams {
  */
 
 function buildCredentialString(credentials: AuthCredentials) {
-    // check endcoding
-    // TODO: set standards for url perecent encodings and write logic for validation
-
-    // build userpass string
-    const userpass = credentials.userpass ? `${credentials.userpass.username}@${credentials.userpass.password}` : ``;
-
-    // return string
-    return userpass;
+    if (credentials.userpass) {
+        // check if inputs is URL encoded
+        if (credentials.isUriEncoded) {
+            // build string and return, no need to encode
+            return `${credentials.userpass.username}:${credentials.userpass.password}@`;     
+        } else {
+            return `${encodeURIComponent(credentials.userpass.username)}:${encodeURIComponent(credentials.userpass.password)}@`;
+        }
+    } else {
+        return ``;
+    }
 }
 
 function buildHostAndPortString(hostAndPort: HostAndPort) {
+    const hANDp: HostAndPort = hostAndPort;
     // ignore port if undefined, otherwise build string fragment
-    const port = hostAndPort.port ? `[:${hostAndPort.port}]` : ``;
+    const port = hANDp.port ? `:${hANDp.port}` : ``;
 
     // return concatonated host and port
-    return hostAndPort.host + port;
+    return hANDp.host + port;
 }
 
+/** Builds a valid mongo db connection string */
 function buildUriConnectionString(params: ConnectionParams) {
     // build credentials string
+    const credentialsString = buildCredentialString(params.credentials);
 
     // build host and port string
+    const hostAndPortString = buildHostAndPortString(params.hostAndPort);
 
     // build default auth db string
+    const authDbString = ``;
 
     // build additional options string
+    const additionalOptionsString = ``;
 
     // return concatonate pieces with prepend uriPrefix
+    return params.uriPrefix + credentialsString + hostAndPortString + authDbString + additionalOptionsString;
 }
 
 
@@ -164,26 +170,27 @@ function buildUriConnectionString(params: ConnectionParams) {
  * connection with the database server, and returns 
  * a connection object.
  */
-export async function handleClientConnection() {
-    try {
-        // require the MongoClient constructor
-        const MongoClient = require('mongodb').MongoClient;
+// export async function handleClientConnection() {
+//     try {
+//         // require the MongoClient constructor
 
-        // look for a MONGO_DB_URL on process.env object
-        // throw an error if none found
-        if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
+//         const MongoClient = require('mongodb').MongoClient;
 
-        // establish connection
-        const clientConnection = new MongoClient(process.env.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+//         // look for a MONGO_DB_URL on process.env object
+//         // throw an error if none found
+//         if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
 
-        return {
-            getConnectionObject() {
-                return clientConnection;
-            }
-        }
-    } catch (err) {
-        if (err instanceof Error) throw new Error(err.message);
+//         // establish connection
+//         const clientConnection = new MongoClient(process.env.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
-        throw new Error('An unknown error occurred');
-    }
-};
+//         return {
+//             getConnectionObject() {
+//                 return clientConnection;
+//             }
+//         }
+//     } catch (err) {
+//         if (err instanceof Error) throw new Error(err.message);
+
+//         throw new Error('An unknown error occurred');
+//     }
+// };
