@@ -30,19 +30,46 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
         // return args
         return options.args;
     } else if (paramType === "custom") {
-        Object.entries(options.custom).forEach((item) => {
-            const key: string = item[0];
-            const customId: string = item[1];
-            // use custom naming conventions to map private process.env fields into a ConnectionParams object
-        });
-        // look for connection string params based on custom env var naming scheme
+        const customParams = (options === undefined || options.custom === undefined) ? new Error(`When passing "custom" paramType, a corresponding "custom" object--containing the custom variable names--must be passed inside of the options param`) : buildCustomParams(options.custom);
+
+        // if error resulted, throw it
+        if (customParams instanceof Error) throw customParams;
+
+        // otherwise return the custom params
+        return customParams;
     } else {
         // look for connection string params based on standard env var naming scheme
         if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
 
         // (this assumes that the server running the program is only communicating with a single database or cluster)
-        
     }
+}
+
+function buildCustomParams(params: CustomConnectionParamLocation) {
+    const customPrefix: UriPrefix = process.env[params.PREFIX];
+    if ((customPrefix !== 'mongo+srv://') && (customPrefix !== 'mongodb://')) throw new Error('The value provided for customPrefix property at custom env var location does not match any expected prefixes')
+    
+    
+    const customCredentials: AuthCredentials = {
+        isUriEncoded: process.env[params.AUTH.IS_URI_ENCODED],
+        userpass: {
+            username: process.env[params.AUTH.USERNAME],
+            password: process.env[params.AUTH.PASSWORD]
+        }        
+    };
+
+    const customHostAndPort: HostAndPort = {
+        host: process.env[params.HOST_AND_PORT.HOST],
+        port: process.env[params.HOST_AND_PORT.PORT]        
+    }
+    const customParams: ConnectionParams = {
+        uriPrefix: customPrefix,
+        credentials: customCredentials,
+        hostAndPort: customHostAndPort
+        // add support for additional db auth and options
+    }
+    
+    return customParams;
 }
 
 /**
