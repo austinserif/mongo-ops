@@ -85,12 +85,9 @@ interface ConnectionParams {
     additionalOptions?: string // TOOD: understand this and create interface
 };
 
-// FUNCTION: getConnectionStringConfig
 /**
- * TOOD: Define a function that takes a configuration object that tells
- * the program where to look for variables to build a connection string 
- * (current args, default env vars, special env vars, etc). If the inputs are valid, 
- * then the function should build them into an object and return it.
+ * Builds a valid credential string. `credentials.isUriEncoded` MUST be included in param. Function will use
+ * this to determine whether or not username and password require encoding before credential string concatonation.
  */
 
 function buildCredentialString(credentials: AuthCredentials) {
