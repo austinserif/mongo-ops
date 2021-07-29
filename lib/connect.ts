@@ -27,13 +27,16 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
         // throw error if no corresponding args object is passed
         if (options === undefined || !options.args) throw new MongoOpsError(`When passing "args" paramType, a corresponding "args" object--containing the arguments--must be passed inside of the options param`);
 
-
-
+        // return args
+        return options.args;
     } else if (paramType === "custom") {
         // look for connection string params based on custom env var naming scheme
     } else {
-        // look for connection string params based on standard env var naming scheme 
+        // look for connection string params based on standard env var naming scheme
+        if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
+
         // (this assumes that the server running the program is only communicating with a single database or cluster)
+        
     }
 }
 
@@ -44,7 +47,11 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
  */
 interface CustomConnectionParamLocation {
     PREFIX: UriPrefix,
-    AUTH: object,
+    AUTH: {
+        USERNAME: string,
+        PASSWORD: string,
+        IS_URI_ENCODED: boolean
+    },
     HOST_AND_PORT: {
         HOST: string,
         PORT?: string
@@ -163,21 +170,19 @@ function buildUriConnectionString(params: ConnectionParams) {
 */
 
 
-// FUNCTION: handleClientConnection
 /**
- * TODO: write a function closure that establishes a 
- * connection with the database server, and returns 
+ * Establishes a connection with the database server, and returns 
  * a connection object.
  */
-export async function handleClientConnection() {
+export async function handleClientConnection(paramType: ConnectionParamType, options?:{ args?: ConnectionParams, custom?: CustomConnectionParamLocation }) {
     try {
+        // build the correct connection string params
+        const connectionParams = getConnectionStringParams(paramType, options);
 
-        // look for a MONGO_DB_URL on process.env object
-        // throw an error if none found
-        if (!process.env.MONGO_DB_URL || process.env.MONGO_DB_URL === 'undefined') throw new Error('No connection string found in environment variables');
+        const connectionString = buildUriConnectionString(connectionParams);
 
         // establish connection
-        const clientConnection = new MongoClient(process.env.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+        const clientConnection = new MongoClient(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
 
         return {
             getConnectionObject() {
