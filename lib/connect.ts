@@ -105,6 +105,7 @@ function buildCredentialString(credentials: AuthCredentials) {
     }
 }
 
+/** build a valid host and port string */
 function buildHostAndPortString(hostAndPort: HostAndPort) {
     const hANDp: HostAndPort = hostAndPort;
     // ignore port if undefined, otherwise build string fragment
