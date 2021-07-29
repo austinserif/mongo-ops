@@ -30,6 +30,11 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
         // return args
         return options.args;
     } else if (paramType === "custom") {
+        Object.entries(options.custom).forEach((item) => {
+            const key: string = item[0];
+            const customId: string = item[1];
+            // use custom naming conventions to map private process.env fields into a ConnectionParams object
+        });
         // look for connection string params based on custom env var naming scheme
     } else {
         // look for connection string params based on standard env var naming scheme
@@ -46,11 +51,11 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
  * this is to allow multi-database/cluster access from a single server.
  */
 interface CustomConnectionParamLocation {
-    PREFIX: UriPrefix,
+    PREFIX: string,
     AUTH: {
         USERNAME: string,
         PASSWORD: string,
-        IS_URI_ENCODED: boolean
+        IS_URI_ENCODED: string
     },
     HOST_AND_PORT: {
         HOST: string,
