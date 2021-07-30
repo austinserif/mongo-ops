@@ -2,6 +2,8 @@
 
 import MongoClient from 'mongodb';
 import MongoOpsError from "./error";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Defines the type of param structure the program should
@@ -38,16 +40,23 @@ export function getConnectionStringParams (paramType: ConnectionParamType, optio
         // otherwise return the custom params
         return customParams;
     } else {
-        const uriPrefix = process.env.PREFIX || new Error('No env variable found for PREFIX');
-        const host = process.env.HOST || new Error('No env variable found for HOST');
-        const port = process.env.PORT || new Error('No env variable found for PORT');
-        const username = process.env.USERNAME || new Error('No env variable found for USERNAME');
-        const password = process.env.PASSWORD || new Error('No env variable found for PASSWORD');
-        const isUriEncoded = process.env.IS_URI_ENCODED || new Error('No env variable found for IS_URI_ENCODED');
+        if (process.env.PREFIX === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const uriPrefix: string = process.env.PREFIX;
 
-        [uriPrefix, host, port, username, password, isUriEncoded].forEach((item) => {
-            if (item instanceof Error) throw item;
-        });
+        if (process.env.HOST === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const host: string = process.env.HOST;
+
+        if (process.env.PORT === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const port: string = process.env.PORT;
+        
+        if (process.env.USERNAME === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const username: string = process.env.USERNAME;
+
+        if (process.env.PASSWORD === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const password: string = process.env.PASSWORD;
+
+        if (process.env.IS_URI_ENCODED === undefined) throw new Error('No string value has been defined for the specified env variable key');
+        const isUriEncoded: string = process.env.IS_URI_ENCODED;
 
         if ((uriPrefix !== 'mongo+srv://') && (uriPrefix !== 'mongodb://')) throw new Error('The value provided for customPrefix property at custom env var location does not match any expected prefixes');
         if ((isUriEncoded !== 'true') && (isUriEncoded !== 'false')) throw new Error('The value provided for isUriEncoded must be either true or false');
@@ -204,7 +213,7 @@ function buildHostAndPortString(hostAndPort: HostAndPort) {
 }
 
 /** Builds a valid mongo db connection string */
-function buildUriConnectionString(params: ConnectionParams) {
+export function buildUriConnectionString(params: ConnectionParams) {
     // build credentials string
     const credentialsString = buildCredentialString(params.credentials);
 
