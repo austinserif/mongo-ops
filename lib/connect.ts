@@ -188,7 +188,7 @@ interface ConnectionParams {
  * this to determine whether or not username and password require encoding before credential string concatonation.
  */
 
-function buildCredentialString(credentials: AuthCredentials) {
+export function buildCredentialString(credentials: AuthCredentials) {
     if (credentials.userpass) {
         // check if inputs is URL encoded
         if (credentials.isUriEncoded) {
@@ -203,7 +203,7 @@ function buildCredentialString(credentials: AuthCredentials) {
 }
 
 /** build a valid host and port string */
-function buildHostAndPortString(hostAndPort: HostAndPort) {
+export function buildHostAndPortString(hostAndPort: HostAndPort) {
     const hANDp: HostAndPort = hostAndPort;
     // ignore port if undefined, otherwise build string fragment
     const port = hANDp.port ? `:${hANDp.port}` : ``;
