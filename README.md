@@ -1,7 +1,7 @@
 # Mongo Operations
 
 ## Overview
-`mongo-ops` is a Node.js wrapper for MongoDB's `mongo-client` package. It exposes a clean API for abstract database operations, and is intended to be an easy standard for making MongoDB calls from within database models.
+`mongo-ops` is a Node.js wrapper for MongoDB's `mongo-client` package. It exposes a clean API for abstract database operations, and is intended to be an easy standard for making db calls from within models.
 
 ## Outline
 
